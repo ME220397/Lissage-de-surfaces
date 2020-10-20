@@ -50,6 +50,14 @@ public:
     void displayMesh(MyMesh *_mesh, DisplayMode mode = DisplayMode::Normal);
     void resetAllColorsAndThickness(MyMesh* _mesh);
 
+    // Fonctions TPs
+    void operateur_laplace_beltrami(MyMesh* _mesh, VertexHandle v, int choix);
+    void laplace_beltrami_cot(MyMesh* _mesh, VertexHandle v);
+    void laplace_beltrami_uni(MyMesh* _mesh, VertexHandle v);
+    MyMesh::Scalar calcul_poids_cot(MyMesh* _mesh, VertexHandle vi, VertexHandle vj);
+    MyMesh::Scalar calcul_aire_barycentres(MyMesh* _mesh, VertexHandle *v);
+
+
 private slots:
 
     void on_pushButton_chargement_clicked();
@@ -66,7 +74,8 @@ private slots:
 private:
 
     bool modevoisinage;
-
+    const int COTANGENTE = 0;
+    const int UNIFORME = 0;
     MyMesh mesh;
 
     int vertexSelection;

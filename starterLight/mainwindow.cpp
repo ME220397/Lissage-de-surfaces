@@ -3,6 +3,60 @@
 
 /* **** début de la partie à compléter **** */
 
+float cot(float teta){
+    return std::cos(teta)/std::sin(teta);
+}
+
+void MainWindow::operateur_laplace_beltrami(MyMesh* _mesh, VertexHandle v, int choix){
+    if(choix == COTANGENTE){
+        laplace_beltrami_cot(_mesh, v);
+    }else if(choix == UNIFORME)
+        laplace_beltrami_uni(_mesh, v);
+}
+
+void MainWindow::laplace_beltrami_uni(MyMesh* _mesh, VertexHandle v){
+    // A completer
+}
+void MainWindow::laplace_beltrami_cot(MyMesh* _mesh, VertexHandle v){
+    // A completer
+}
+
+MyMesh::Scalar MainWindow::calcul_poids_cot(MyMesh *_mesh, VertexHandle vi, VertexHandle vj){
+    HalfedgeHandle next;
+    MyMesh::Scalar alpha= 0;
+    MyMesh::Scalar beta = 0;
+
+    for(MyMesh::VertexIHalfedgeIter vh_it = _mesh->vih_iter(vi); vh_it.is_valid(); vh_it++){
+        HalfedgeHandle heh = vh_it;
+        if(_mesh->to_vertex_handle(heh) == vi){
+            next = _mesh->next_halfedge_handle(heh);
+            alpha = _mesh->calc_sector_angle(next);
+            qDebug() << "alpha = " << alpha;
+            heh = _mesh->opposite_halfedge_handle(heh);
+            next = _mesh->next_halfedge_handle(heh);
+            beta = _mesh->calc_sector_angle(next);
+            qDebug() << "beta = " << alpha;
+            break;
+        }
+    }
+    MyMesh::Scalar cot_alpha = cot(alpha);
+    MyMesh::Scalar cot_beta = cot(beta);
+    return cot_alpha + cot_beta;
+
+}
+
+MyMesh::Scalar calcul_aire_barycentres(MyMesh* _mesh, VertexHandle *v){
+    HalfedgeHandle halfed;
+    MyMesh::Scalar somme = 0;
+    for(MyMesh::VertexFaceIter f_it = _mesh->vf_iter(*v); f_it.is_valid(); ++f_it)
+    {
+        FaceHandle f = f_it;
+        halfed = _mesh->halfedge_handle(f);
+        somme += _mesh->calc_sector_area(halfed);
+    }
+    return somme/3;
+}
+
 void MainWindow::showSelections(MyMesh* _mesh)
 {
     // on réinitialise les couleurs de tout le maillage
