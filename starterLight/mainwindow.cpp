@@ -3,6 +3,65 @@
 
 /* **** début de la partie à compléter **** */
 
+
+
+
+
+void operateur_laplace_beltrami(MyMesh* _mesh, int choix){
+
+}
+
+void laplace_beltrami_cot(MyMesh* _mesh, VertexHandle *v){
+
+}
+
+void laplace_beltrami_uni(MyMesh* _mesh){
+
+}
+
+MyMesh::Scalar calcul_angle(MyMesh* _mesh){
+
+}
+
+MyMesh::Scalar calcul_aire_barycentres(MyMesh* _mesh, VertexHandle *v){
+    HalfedgeHandle halfed;
+    MyMesh::Scalar somme = 0;
+    for(MyMesh::VertexFaceIter f_it = _mesh->vf_iter(*v); f_it.is_valid(); ++f_it)
+    {
+        FaceHandle f = f_it;
+        halfed = _mesh->halfedge_handle(f);
+        somme += _mesh->calc_sector_area(halfed);
+    }
+    return somme/3;
+}
+
+float cot(float angle){
+    return cos(angle)/sin(angle);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 void MainWindow::showSelections(MyMesh* _mesh)
 {
     // on réinitialise les couleurs de tout le maillage

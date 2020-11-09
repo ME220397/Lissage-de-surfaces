@@ -50,6 +50,12 @@ public:
     void displayMesh(MyMesh *_mesh, DisplayMode mode = DisplayMode::Normal);
     void resetAllColorsAndThickness(MyMesh* _mesh);
 
+    void operateur_laplace_beltrami(MyMesh* _mesh, int choix);
+    void laplace_beltrami_cot(MyMesh* _mesh);
+    void laplace_beltrami_uni(MyMesh* _mesh);
+    MyMesh::Scalar calcul_angle(MyMesh* _mesh);
+    MyMesh::Scalar calcul_aire_barycentres(MyMesh* _mesh, VertexHandle *v);
+
 private slots:
 
     void on_pushButton_chargement_clicked();
