@@ -42,6 +42,21 @@ MyMesh::Scalar MainWindow::calcul_poids_cot(MyMesh *_mesh, VertexHandle vi, Vert
     MyMesh::Scalar cot_alpha = cot(alpha);
     MyMesh::Scalar cot_beta = cot(beta);
     return cot_alpha + cot_beta;
+}
+
+void operateur_laplace_beltrami(MyMesh* _mesh, int choix){
+
+}
+
+void laplace_beltrami_cot(MyMesh* _mesh, VertexHandle *v){
+
+}
+
+void laplace_beltrami_uni(MyMesh* _mesh, VertexHandle *v){
+
+}
+
+MyMesh::Scalar calcul_angle(MyMesh* _mesh){
 
 }
 

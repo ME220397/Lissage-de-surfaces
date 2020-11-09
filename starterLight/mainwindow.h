@@ -57,7 +57,6 @@ public:
     MyMesh::Scalar calcul_poids_cot(MyMesh* _mesh, VertexHandle vi, VertexHandle vj);
     MyMesh::Scalar calcul_aire_barycentres(MyMesh* _mesh, VertexHandle *v);
 
-
 private slots:
 
     void on_pushButton_chargement_clicked();
