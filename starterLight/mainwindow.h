@@ -51,11 +51,11 @@ public:
     void resetAllColorsAndThickness(MyMesh* _mesh);
 
     // Fonctions TPs
-    void operateur_laplace_beltrami(MyMesh* _mesh, VertexHandle v, int choix);
+    void operateur_laplace_beltrami(MyMesh* _mesh, int choix);
     void laplace_beltrami_cot(MyMesh* _mesh, VertexHandle v);
     void laplace_beltrami_uni(MyMesh* _mesh, VertexHandle v);
     MyMesh::Scalar calcul_poids_cot(MyMesh* _mesh, VertexHandle vi, VertexHandle vj);
-    MyMesh::Scalar calcul_aire_barycentres(MyMesh* _mesh, VertexHandle *v);
+    MyMesh::Scalar calcul_aire_barycentres(MyMesh* _mesh, VertexHandle v);
     MyMesh::Point direction_v_vi(MyMesh* _mesh, VertexHandle v, VertexHandle vi);
 
 private slots:

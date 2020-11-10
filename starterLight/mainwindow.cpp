@@ -7,11 +7,12 @@ float cot(float teta){
     return std::cos(teta)/std::sin(teta);
 }
 
-void MainWindow::operateur_laplace_beltrami(MyMesh* _mesh, VertexHandle v, int choix){
+void MainWindow::operateur_laplace_beltrami(MyMesh* _mesh, int choix){
+    VertexHandle v = _mesh->vertex_handle(0);
     if(choix == COTANGENTE){
+        // Les points partent vers l'infini.
         laplace_beltrami_cot(_mesh, v);
-    }else if(choix == UNIFORME)
-        laplace_beltrami_uni(_mesh, v);
+    }
 }
 
 void MainWindow::laplace_beltrami_uni(MyMesh* _mesh, VertexHandle v){
@@ -20,7 +21,7 @@ void MainWindow::laplace_beltrami_uni(MyMesh* _mesh, VertexHandle v){
 }
 void MainWindow::laplace_beltrami_cot(MyMesh *_mesh, VertexHandle v){
     // A completer
-    MyMesh::Scalar aire = calcul_aire_barycentres(_mesh, &v);
+    MyMesh::Scalar aire = calcul_aire_barycentres(_mesh, v);
     MyMesh::Scalar facteur = 1/(2*aire);
     MyMesh::Point v_current;
 
@@ -30,17 +31,13 @@ void MainWindow::laplace_beltrami_cot(MyMesh *_mesh, VertexHandle v){
         v_current += (calcul_poids_cot(_mesh, v, vi)*direction_v_vi(_mesh, v, vi));
     }
     v_current *= facteur;
-
     _mesh->set_point(v,v_current);
 }
 
 MyMesh::Point MainWindow::direction_v_vi(MyMesh* _mesh, VertexHandle v, VertexHandle vi){
     MyMesh::Point fv = _mesh->point(v);
     MyMesh::Point fvi = _mesh->point(vi);
-    qDebug() << "fv : " << fv[0] <<fv[1] << fv[2];
-    qDebug() << "fvi : " << fvi[0] <<fvi[1] << fvi[2];
     MyMesh::Point u = fvi - fv;
-    qDebug() << "u : " << u[0] <<u[1] << u[2];
     return u;
 }
 
@@ -54,9 +51,11 @@ MyMesh::Scalar MainWindow::calcul_poids_cot(MyMesh *_mesh, VertexHandle vi, Vert
         if(_mesh->to_vertex_handle(heh) == vi){
             next = _mesh->next_halfedge_handle(heh);
             alpha = _mesh->calc_sector_angle(next);
+            qDebug() << "alpha :" << alpha;
             heh = _mesh->opposite_halfedge_handle(heh);
             next = _mesh->next_halfedge_handle(heh);
             beta = _mesh->calc_sector_angle(next);
+            qDebug() << "beta :" << beta;
             break;
         }
     }
@@ -65,10 +64,10 @@ MyMesh::Scalar MainWindow::calcul_poids_cot(MyMesh *_mesh, VertexHandle vi, Vert
     return cot_alpha + cot_beta;
 }
 
-MyMesh::Scalar calcul_aire_barycentres(MyMesh* _mesh, VertexHandle *v){
+MyMesh::Scalar MainWindow::calcul_aire_barycentres(MyMesh* _mesh, VertexHandle v){
     HalfedgeHandle halfed;
     MyMesh::Scalar somme = 0;
-    for(MyMesh::VertexFaceIter f_it = _mesh->vf_iter(*v); f_it.is_valid(); ++f_it)
+    for(MyMesh::VertexFaceIter f_it = _mesh->vf_iter(v); f_it.is_valid(); ++f_it)
     {
         FaceHandle f = f_it;
         halfed = _mesh->halfedge_handle(f);
@@ -253,8 +252,8 @@ void MainWindow::on_pushButton_facePlus_clicked()
 
 void MainWindow::on_pushButton_afficherChemin_clicked()
 {
-    // on récupère les sommets de départ et d'arrivée
-    laplace_beltrami_cot(&_mesh, )
+   operateur_laplace_beltrami(&mesh, COTANGENTE);
+   displayMesh(&mesh);
 }
 
 
