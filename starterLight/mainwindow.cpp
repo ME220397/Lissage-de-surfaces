@@ -17,8 +17,19 @@ void MainWindow::operateur_laplace_beltrami(MyMesh* _mesh, VertexHandle v, int c
 void MainWindow::laplace_beltrami_uni(MyMesh* _mesh, VertexHandle v){
     // A completer
 }
-void MainWindow::laplace_beltrami_cot(MyMesh* _mesh, VertexHandle v){
+void MainWindow::laplace_beltrami_cot(MyMesh *_mesh, VertexHandle v){
     // A completer
+    MyMesh::Scalar aire = calcul_aire_barycentres(_mesh, &v);
+    MyMesh::Scalar facteur = 1/(2*aire);
+
+    VertexHandle v_transit;
+
+    for(MyMesh::VertexVertexIter vv_it=mesh.vv_iter(v); vv_it.is_valid(); ++vv_it)
+    {
+        VertexHandle vi = vv_it;
+        v_transit += (calcul_poids_cot(_mesh, v, vi)*(v-vi));
+    }
+    v_transit = facteur*v_transit;
 }
 
 MyMesh::Scalar MainWindow::calcul_poids_cot(MyMesh *_mesh, VertexHandle vi, VertexHandle vj){
@@ -42,22 +53,6 @@ MyMesh::Scalar MainWindow::calcul_poids_cot(MyMesh *_mesh, VertexHandle vi, Vert
     MyMesh::Scalar cot_alpha = cot(alpha);
     MyMesh::Scalar cot_beta = cot(beta);
     return cot_alpha + cot_beta;
-}
-
-void operateur_laplace_beltrami(MyMesh* _mesh, int choix){
-
-}
-
-void laplace_beltrami_cot(MyMesh* _mesh, VertexHandle *v){
-
-}
-
-void laplace_beltrami_uni(MyMesh* _mesh, VertexHandle *v){
-
-}
-
-MyMesh::Scalar calcul_angle(MyMesh* _mesh){
-
 }
 
 MyMesh::Scalar calcul_aire_barycentres(MyMesh* _mesh, VertexHandle *v){
