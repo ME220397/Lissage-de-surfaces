@@ -268,6 +268,8 @@ void MainWindow::on_pushButton_afficherChemin_clicked()
     q[2] = 1;
 
     MyMesh::Point u = p-q;
+    u = u*3;
+    qDebug() << "u : " << u[0] <<u[1] << u[2];
 }
 
 
