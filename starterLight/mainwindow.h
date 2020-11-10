@@ -56,6 +56,7 @@ public:
     void laplace_beltrami_uni(MyMesh* _mesh, VertexHandle v);
     MyMesh::Scalar calcul_poids_cot(MyMesh* _mesh, VertexHandle vi, VertexHandle vj);
     MyMesh::Scalar calcul_aire_barycentres(MyMesh* _mesh, VertexHandle *v);
+    MyMesh::Point direction_v_vi(MyMesh* _mesh, VertexHandle v, VertexHandle vi);
 
 private slots:
 

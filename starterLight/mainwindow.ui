@@ -453,7 +453,7 @@
           <item>
            <widget class="QPushButton" name="pushButton_afficherChemin">
             <property name="text">
-             <string>Afficher le chemin</string>
+             <string>Direction test</string>
             </property>
            </widget>
           </item>
