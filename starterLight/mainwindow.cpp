@@ -21,6 +21,16 @@ void MainWindow::laplace_beltrami_cot(MyMesh* _mesh, VertexHandle v){
     // A completer
 }
 
+MyMesh::Point MainWindow::direction_v_vi(MyMesh* _mesh, VertexHandle v, VertexHandle vi){
+    MyMesh::Point fv = _mesh->point(v);
+    MyMesh::Point fvi = _mesh->point(vi);
+    qDebug() << "fv : " << fv[0] <<fv[1] << fv[2];
+    qDebug() << "fvi : " << fvi[0] <<fvi[1] << fvi[2];
+    MyMesh::Point u = fvi - fv;
+    qDebug() << "u : " << u[0] <<u[1] << u[2];
+    return u;
+}
+
 MyMesh::Scalar MainWindow::calcul_poids_cot(MyMesh *_mesh, VertexHandle vi, VertexHandle vj){
     HalfedgeHandle next;
     MyMesh::Scalar alpha= 0;
@@ -31,11 +41,9 @@ MyMesh::Scalar MainWindow::calcul_poids_cot(MyMesh *_mesh, VertexHandle vi, Vert
         if(_mesh->to_vertex_handle(heh) == vi){
             next = _mesh->next_halfedge_handle(heh);
             alpha = _mesh->calc_sector_angle(next);
-            qDebug() << "alpha = " << alpha;
             heh = _mesh->opposite_halfedge_handle(heh);
             next = _mesh->next_halfedge_handle(heh);
             beta = _mesh->calc_sector_angle(next);
-            qDebug() << "beta = " << alpha;
             break;
         }
     }
@@ -249,10 +257,17 @@ void MainWindow::on_pushButton_facePlus_clicked()
 void MainWindow::on_pushButton_afficherChemin_clicked()
 {
     // on récupère les sommets de départ et d'arrivée
-    int indexV1 = ui->spinBox_v1_chemin->value();
-    int indexV2 = ui->spinBox_v2_chemin->value();
+    MyMesh::Point p;
+    p[0] = -1;
+    p[1] = -1;
+    p[2] = -1;
 
-    showPath(&mesh, indexV1, indexV2);
+    MyMesh::Point q;
+    q[0] = 1;
+    q[1] = 1;
+    q[2] = 1;
+
+    MyMesh::Point u = p-q;
 }
 
 
