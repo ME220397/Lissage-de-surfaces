@@ -16,20 +16,22 @@ void MainWindow::operateur_laplace_beltrami(MyMesh* _mesh, VertexHandle v, int c
 
 void MainWindow::laplace_beltrami_uni(MyMesh* _mesh, VertexHandle v){
     // A completer
+
 }
 void MainWindow::laplace_beltrami_cot(MyMesh *_mesh, VertexHandle v){
     // A completer
     MyMesh::Scalar aire = calcul_aire_barycentres(_mesh, &v);
     MyMesh::Scalar facteur = 1/(2*aire);
-
-    VertexHandle v_transit;
+    MyMesh::Point v_current;
 
     for(MyMesh::VertexVertexIter vv_it=mesh.vv_iter(v); vv_it.is_valid(); ++vv_it)
     {
         VertexHandle vi = vv_it;
-        v_transit += (calcul_poids_cot(_mesh, v, vi)*(v-vi));
+        v_current += (calcul_poids_cot(_mesh, v, vi)*direction_v_vi(_mesh, v, vi));
     }
-    v_transit = facteur*v_transit;
+    v_current *= facteur;
+
+    _mesh->set_point(v,v_current);
 }
 
 MyMesh::Point MainWindow::direction_v_vi(MyMesh* _mesh, VertexHandle v, VertexHandle vi){
@@ -252,19 +254,7 @@ void MainWindow::on_pushButton_facePlus_clicked()
 void MainWindow::on_pushButton_afficherChemin_clicked()
 {
     // on récupère les sommets de départ et d'arrivée
-    MyMesh::Point p;
-    p[0] = -1;
-    p[1] = -1;
-    p[2] = -1;
-
-    MyMesh::Point q;
-    q[0] = 1;
-    q[1] = 1;
-    q[2] = 1;
-
-    MyMesh::Point u = p-q;
-    u = u*3;
-    qDebug() << "u : " << u[0] <<u[1] << u[2];
+    laplace_beltrami_cot(&_mesh, )
 }
 
 
