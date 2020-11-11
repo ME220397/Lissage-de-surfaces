@@ -3,15 +3,53 @@
 
 /* **** début de la partie à compléter **** */
 
-float cot(float teta){
+double cot(double teta){
     return std::cos(teta)/std::sin(teta);
 }
 
-void MainWindow::operateur_laplace_beltrami(MyMesh* _mesh, int choix){
-    VertexHandle v = _mesh->vertex_handle(0);
+void scale(MyMesh* _mesh, float alpha) {
+    for (MyMesh::VertexIter viter = _mesh->vertices_begin() ; viter != _mesh->vertices_end(); viter++) {
+        VertexHandle v = *viter;
+        MyMesh::Point newCoordinate;
+        newCoordinate = _mesh->point(v);
+        _mesh->set_point(v, newCoordinate*alpha);
+    }
+
+}
+void MainWindow::flou_de_diffusion(MyMesh *_mesh, VertexHandle v, MyMesh::Point vi, double f){
+    MyMesh::Point x = _mesh->point(v);
+    MyMesh::Point fx = vi;
+    qDebug() << fx[0] << fx[1] << fx[2];
+    fx *= f;
+    qDebug() << "{y, h} * fxi :" << fx[0] << fx[1] << fx[2];
+    MyMesh::Point new_p = x + fx;
+    qDebug() << "xi :" << new_p[0] << new_p[1] << new_p[2];
+    _mesh->set_point(v, new_p);
+}
+
+void MainWindow::operateur_laplace_beltrami(MyMesh* _mesh, int choix, double h, double _y){
+    QVector<MyMesh::Point> list_fv;
+
     if(choix == COTANGENTE){
         // Les points partent vers l'infini.
-        laplace_beltrami_cot(_mesh, v);
+        for (MyMesh::VertexIter viter = _mesh->vertices_begin() ; viter != _mesh->vertices_end(); viter++) {
+            VertexHandle v = *viter;
+            list_fv.append(laplace_beltrami_cot(_mesh, v));
+            MyMesh::Point p = laplace_beltrami_cot(_mesh, v);
+            if(factor_change)
+                flou_de_diffusion(_mesh, v, p, h);
+            else
+                flou_de_diffusion(_mesh, v,p,  _y);
+        }
+
+        /*for(int i=0; i<list_fv.length(); i++){
+            VertexHandle v = _mesh->vertex_handle(i);
+            MyMesh::Point p = list_fv.at(i);
+            if(factor_change)
+                flou_de_diffusion(_mesh, v, p, _y);
+            else
+                flou_de_diffusion(_mesh, v,p,  h);
+        }*/
     }
 }
 
@@ -19,19 +57,56 @@ void MainWindow::laplace_beltrami_uni(MyMesh* _mesh, VertexHandle v){
     // A completer
 
 }
-void MainWindow::laplace_beltrami_cot(MyMesh *_mesh, VertexHandle v){
+
+MyMesh::Point normalise_point(MyMesh::Point p){
+    float p_x_squared = pow((float)p[0], 2);
+    float p_y_squared = pow((float)p[1], 2);
+    float p_z_squared = pow((float)p[2], 2);
+
+    float norm = sqrt(p_x_squared +p_y_squared +p_z_squared);
+    //qDebug() << "direction :" << p[0] << p[1] << p[2];
+    p = p/norm;
+    //qDebug() << "direction normalisée :" << p[0] << p[1] << p[2];
+    return p;
+}
+MyMesh::Point MainWindow::laplace_beltrami_cot(MyMesh *_mesh, VertexHandle v){
     // A completer
     MyMesh::Scalar aire = calcul_aire_barycentres(_mesh, v);
-    MyMesh::Scalar facteur = 1/(2*aire);
-    MyMesh::Point v_current;
+    //qDebug() << "aire : " << (float)aire;
+    MyMesh::Scalar facteur =1/(2*aire);
+    //if(aire < 1)
+    //    facteur = 1/2;
 
+    //qDebug() << "facteur : " << facteur;
+    MyMesh::Point v_current;
+    v_current[0] = 0;
+    v_current[1] = 0;
+    v_current[2] = 0;
+    MyMesh::Point tmp;
     for(MyMesh::VertexVertexIter vv_it=mesh.vv_iter(v); vv_it.is_valid(); ++vv_it)
     {
-        VertexHandle vi = vv_it;
-        v_current += (calcul_poids_cot(_mesh, v, vi)*direction_v_vi(_mesh, v, vi));
+        VertexHandle vi = *vv_it;
+        double poids = calcul_poids_cot(_mesh, v, vi);
+        double p_abs = abs(poids);
+        if(p_abs < 0.0001){
+            poids = 0;
+        }
+        //qDebug() << "poids : " << poids;
+        MyMesh::Point p = direction_v_vi(_mesh, v, vi);
+        //MyMesh::Point p = normalise_point(q);
+        //qDebug() << "p : " << p[0] << p[1] << p[2];
+        tmp[0] = poids * p[0];
+        tmp[1] = poids * p[1];
+        tmp[2] = poids * p[2];
+        //qDebug() << "tmp : " << tmp[0] << tmp[1] << tmp[2];
+        v_current += tmp;
+        //qDebug() << "v_current : " << v_current[0] << v_current[1] << v_current[2];
     }
+
     v_current *= facteur;
-    _mesh->set_point(v,v_current);
+    //_mesh->set_point(v, v_current);
+    //qDebug() << "v_current * "<< facteur <<  ": " << v_current[0] << v_current[1] << v_current[2];
+    return v_current.normalized();
 }
 
 MyMesh::Point MainWindow::direction_v_vi(MyMesh* _mesh, VertexHandle v, VertexHandle vi){
@@ -40,8 +115,7 @@ MyMesh::Point MainWindow::direction_v_vi(MyMesh* _mesh, VertexHandle v, VertexHa
     MyMesh::Point u = fvi - fv;
     return u;
 }
-
-MyMesh::Scalar MainWindow::calcul_poids_cot(MyMesh *_mesh, VertexHandle vi, VertexHandle vj){
+double MainWindow::calcul_poids_cot(MyMesh *_mesh, VertexHandle vi, VertexHandle vj){
     HalfedgeHandle next;
     MyMesh::Scalar alpha= 0;
     MyMesh::Scalar beta = 0;
@@ -51,16 +125,16 @@ MyMesh::Scalar MainWindow::calcul_poids_cot(MyMesh *_mesh, VertexHandle vi, Vert
         if(_mesh->to_vertex_handle(heh) == vi){
             next = _mesh->next_halfedge_handle(heh);
             alpha = _mesh->calc_sector_angle(next);
-            qDebug() << "alpha :" << alpha;
+            //qDebug() << "alpha :" << double(alpha);
             heh = _mesh->opposite_halfedge_handle(heh);
             next = _mesh->next_halfedge_handle(heh);
             beta = _mesh->calc_sector_angle(next);
-            qDebug() << "beta :" << beta;
+            //qDebug() << "beta :" << double(beta);
             break;
         }
     }
-    MyMesh::Scalar cot_alpha = cot(alpha);
-    MyMesh::Scalar cot_beta = cot(beta);
+    double cot_alpha = cot(double(alpha));
+    double cot_beta = cot(double(beta));
     return cot_alpha + cot_beta;
 }
 
@@ -71,8 +145,11 @@ MyMesh::Scalar MainWindow::calcul_aire_barycentres(MyMesh* _mesh, VertexHandle v
     {
         FaceHandle f = f_it;
         halfed = _mesh->halfedge_handle(f);
-        somme += _mesh->calc_sector_area(halfed);
+        MyMesh::Scalar aire = _mesh->calc_sector_area(halfed);
+        qDebug() << "aire : " << aire;
+        somme += aire;
     }
+    qDebug() << "somme aire / 3 : " << somme/3;
     return somme/3;
 }
 
@@ -145,118 +222,6 @@ void MainWindow::showPath(MyMesh* _mesh, int v1, int v2)
 
 /* **** début de la partie boutons et IHM **** */
 
-void MainWindow::on_pushButton_bordure_clicked()
-{
-    showBorder(&mesh);
-}
-
-void MainWindow::on_pushButton_voisinage_clicked()
-{
-    // changement de mode entre avec et sans voisinage
-    if(modevoisinage)
-    {
-        ui->pushButton_voisinage->setText("Repasser en mode normal");
-        modevoisinage = false;
-    }
-    else
-    {
-        ui->pushButton_voisinage->setText("Passer en mode voisinage");
-        modevoisinage = true;
-    }
-
-    // on montre la nouvelle selection
-    if(!modevoisinage)
-        showSelections(&mesh);
-    else
-        showSelectionsNeighborhood(&mesh);
-}
-
-
-void MainWindow::on_pushButton_vertexMoins_clicked()
-{
-    // mise à jour de l'interface
-    vertexSelection = vertexSelection - 1;
-    ui->labelVertex->setText(QString::number(vertexSelection));
-
-    // on montre la nouvelle selection
-    if(!modevoisinage)
-        showSelections(&mesh);
-    else
-        showSelectionsNeighborhood(&mesh);
-}
-
-void MainWindow::on_pushButton_vertexPlus_clicked()
-{
-    // mise à jour de l'interface
-    vertexSelection = vertexSelection + 1;
-    ui->labelVertex->setText(QString::number(vertexSelection));
-
-    // on montre la nouvelle selection
-    if(!modevoisinage)
-        showSelections(&mesh);
-    else
-        showSelectionsNeighborhood(&mesh);
-}
-
-void MainWindow::on_pushButton_edgeMoins_clicked()
-{
-    // mise à jour de l'interface
-    edgeSelection = edgeSelection - 1;
-    ui->labelEdge->setText(QString::number(edgeSelection));
-
-    // on montre la nouvelle selection
-    if(!modevoisinage)
-        showSelections(&mesh);
-    else
-        showSelectionsNeighborhood(&mesh);
-}
-
-void MainWindow::on_pushButton_edgePlus_clicked()
-{
-    // mise à jour de l'interface
-    edgeSelection = edgeSelection + 1;
-    ui->labelEdge->setText(QString::number(edgeSelection));
-
-    // on montre la nouvelle selection
-    if(!modevoisinage)
-        showSelections(&mesh);
-    else
-        showSelectionsNeighborhood(&mesh);
-}
-
-void MainWindow::on_pushButton_faceMoins_clicked()
-{
-    // mise à jour de l'interface
-    faceSelection = faceSelection - 1;
-    ui->labelFace->setText(QString::number(faceSelection));
-
-    // on montre la nouvelle selection
-    if(!modevoisinage)
-        showSelections(&mesh);
-    else
-        showSelectionsNeighborhood(&mesh);
-}
-
-void MainWindow::on_pushButton_facePlus_clicked()
-{
-    // mise à jour de l'interface
-    faceSelection = faceSelection + 1;
-    ui->labelFace->setText(QString::number(faceSelection));
-
-    // on montre la nouvelle selection
-    if(!modevoisinage)
-        showSelections(&mesh);
-    else
-        showSelectionsNeighborhood(&mesh);
-}
-
-void MainWindow::on_pushButton_afficherChemin_clicked()
-{
-   operateur_laplace_beltrami(&mesh, COTANGENTE);
-   displayMesh(&mesh);
-}
-
-
 void MainWindow::on_pushButton_chargement_clicked()
 {
     // fenêtre de sélection des fichiers
@@ -267,7 +232,7 @@ void MainWindow::on_pushButton_chargement_clicked()
 
     // initialisation des couleurs et épaisseurs (sommets et arêtes) du mesh
     resetAllColorsAndThickness(&mesh);
-
+    clone = mesh;
     // on affiche le maillage
     displayMesh(&mesh);
 }
@@ -519,3 +484,28 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
+
+
+void MainWindow::on_operateur_clicked()
+{
+    operateur_laplace_beltrami(&clone, COTANGENTE, h ,_y);
+    displayMesh(&clone);
+}
+
+void MainWindow::on_pushButton_clicked()
+{
+    displayMesh(&mesh);
+
+}
+
+void MainWindow::on_doubleSpinBox_valueChanged(double arg1)
+{
+    factor_change = true;
+    h = -arg1;
+}
+
+void MainWindow::on_doubleSpinBox_2_valueChanged(double arg1)
+{
+    factor_change = false;
+    _y= arg1;
+}

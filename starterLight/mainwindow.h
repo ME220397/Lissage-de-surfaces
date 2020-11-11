@@ -51,25 +51,23 @@ public:
     void resetAllColorsAndThickness(MyMesh* _mesh);
 
     // Fonctions TPs
-    void operateur_laplace_beltrami(MyMesh* _mesh, int choix);
-    void laplace_beltrami_cot(MyMesh* _mesh, VertexHandle v);
+    void operateur_laplace_beltrami(MyMesh* _mesh, int choix, double h, double _y);
+    MyMesh::Point laplace_beltrami_cot(MyMesh* _mesh, VertexHandle v);
     void laplace_beltrami_uni(MyMesh* _mesh, VertexHandle v);
-    MyMesh::Scalar calcul_poids_cot(MyMesh* _mesh, VertexHandle vi, VertexHandle vj);
+    double calcul_poids_cot(MyMesh* _mesh, VertexHandle vi, VertexHandle vj);
     MyMesh::Scalar calcul_aire_barycentres(MyMesh* _mesh, VertexHandle v);
     MyMesh::Point direction_v_vi(MyMesh* _mesh, VertexHandle v, VertexHandle vi);
-
+    void flou_de_diffusion(MyMesh *_mesh, VertexHandle v, MyMesh::Point vi, double f);
 private slots:
 
     void on_pushButton_chargement_clicked();
-    void on_pushButton_vertexMoins_clicked();
-    void on_pushButton_vertexPlus_clicked();
-    void on_pushButton_edgeMoins_clicked();
-    void on_pushButton_edgePlus_clicked();
-    void on_pushButton_faceMoins_clicked();
-    void on_pushButton_facePlus_clicked();
-    void on_pushButton_afficherChemin_clicked();
-    void on_pushButton_voisinage_clicked();
-    void on_pushButton_bordure_clicked();
+    void on_operateur_clicked();
+
+    void on_pushButton_clicked();
+
+    void on_doubleSpinBox_valueChanged(double arg1);
+
+    void on_doubleSpinBox_2_valueChanged(double arg1);
 
 private:
 
@@ -77,11 +75,15 @@ private:
     const int COTANGENTE = 0;
     const int UNIFORME = 0;
     MyMesh mesh;
+    MyMesh clone;
 
     int vertexSelection;
     int edgeSelection;
     int faceSelection;
 
+    double h = -0.001;
+    double _y = 0.001;
+    bool factor_change = false;
     Ui::MainWindow *ui;
 };
 
