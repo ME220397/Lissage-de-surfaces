@@ -5,6 +5,9 @@
 #include <QMainWindow>
 #include <OpenMesh/Core/IO/MeshIO.hh>
 #include <OpenMesh/Core/Mesh/TriMesh_ArrayKernelT.hh>
+#include <../Eigen/Eigen/Dense>
+
+using namespace Eigen;
 
 namespace Ui {
 class MainWindow;
@@ -58,6 +61,9 @@ public:
     MyMesh::Scalar neighboring_faces_area(MyMesh* _mesh, VertexHandle v);
     MyMesh::Point calc_vector_v_vi(MyMesh* _mesh, VertexHandle v, VertexHandle vi);
     void flou_de_diffusion(MyMesh *_mesh, VertexHandle v, MyMesh::Point vi, double f);
+    Matrix<MyMesh::Scalar, Dynamic, Dynamic> matrice_diag(MyMesh* _mesh);
+    Matrix<MyMesh::Scalar, Dynamic, Dynamic> matrice_adj(MyMesh* _mesh);
+    Matrix<MyMesh::Scalar, Dynamic, Dynamic> matrice_Laplace_Beltrami(MyMesh* _mesh);
 private slots:
 
     void on_pushButton_chargement_clicked();

@@ -43,7 +43,8 @@ void MainWindow::operateur_laplace_beltrami(MyMesh* _mesh, int choix, double h, 
             //flou_de_diffusion(_mesh, *current, p, _y);
             //break;
         }
-    }else{
+    }
+    else{
         for (MyMesh::VertexIter current = _mesh->vertices_begin(); current != _mesh->vertices_end(); current++) {
             fvi.append(laplace_beltrami_uni(_mesh, *current));
             //MyMesh::Point p = laplace_beltrami_cot(_mesh, *current);
@@ -173,6 +174,75 @@ MyMesh::Scalar MainWindow::neighboring_faces_area(MyMesh* _mesh, VertexHandle v)
     somme = somme /3;
     return somme;
 }
+
+
+Matrix<MyMesh::Scalar, Dynamic, Dynamic> MainWindow::matrice_diag(MyMesh* _mesh)//Dynamic permet dene pas donner de taille fixe
+{
+    int nb_sommets = _mesh->n_vertices();
+    Matrix<MyMesh::Scalar, Dynamic , Dynamic> d;
+    d.resize(nb_sommets, nb_sommets);//Initialisation de la taille de la matrice
+    for(MyMesh::VertexIter v = _mesh->vertices_begin(); v != _mesh->vertices_end();v++)
+    {
+        VertexHandle vh = *v;
+        MyMesh::Scalar aire = neighboring_faces_area(_mesh, vh);
+        for(int i = 0; i < nb_sommets; i++)
+        {
+            for(int j =0; j < nb_sommets; j++)
+            {
+                if(i==j)
+                    d(i,i) = 1/(2*(aire));
+                else
+                    d(i,j) = 0;
+            }
+        }
+    }
+    return d;
+}//matrice_diag : renvoie la matrice diagonale du calcul de la matrice de Laplace Beltrami
+
+
+Matrix<MyMesh::Scalar, Dynamic, Dynamic> MainWindow::matrice_adj(MyMesh* _mesh)//Dynamic permet de ne pas donner de taille fixe
+{
+    int nb_sommets = _mesh->n_vertices();
+    Matrix<MyMesh::Scalar, Dynamic , Dynamic> m;
+    m.resize(nb_sommets, nb_sommets);
+    for(int i=0; i <nb_sommets; i++)
+    {
+        for(int j = 0; j<nb_sommets; j++)
+        {
+            m(i,j)=0;
+        }
+    }//Initialisation des valeurs de la matrice à 0
+    MyMesh::Scalar poids;
+    int cpt = 0;//Ce compteur sert a savoir ou nous sommes dans la matrice
+    for(MyMesh::VertexIter v = _mesh->vertices_begin(); v != _mesh->vertices_end();v++)
+    {
+        poids = 0;
+        VertexHandle vh = *v;
+        for(MyMesh::VertexVertexIter vi = _mesh->vv_iter(vh); vi.is_valid(); vi++)
+        {
+            VertexHandle vhi = *vi;
+            poids += calcul_poids_cot(_mesh, vh, vhi);//calcul le poids par rapport a deux sommets adjacents et somme sur tous les sommets voisins de v
+        }
+        m(cpt,cpt) = -poids;
+        cpt++;
+    }
+    return m;
+}//matrice_adj : renvoie la matrice d'adjacence de Laplace Beltrami
+
+Matrix<MyMesh::Scalar, Dynamic, Dynamic> MainWindow::matrice_Laplace_Beltrami(MyMesh* _mesh)
+{
+    int nb_sommets = _mesh->n_vertices();
+    Matrix<MyMesh::Scalar, Dynamic , Dynamic> m;
+    m.resize(nb_sommets, nb_sommets);//Initialisation de m
+    m = matrice_adj(_mesh);//calcul de la matrice d'adjacence
+    Matrix<MyMesh::Scalar, Dynamic , Dynamic> d;
+    d.resize(nb_sommets, nb_sommets);//Initialisation de d
+    d = matrice_diag(_mesh);//Calcul de la matrice diag
+    return d*m;
+}//matrice_Laplace_Beltrami : renvoie le produit de la matrice diag et de la matrice d'adjacence ce qui donne la matrice de Laplace Beltrami
+
+
+
 
 void MainWindow::showSelections(MyMesh* _mesh)
 {
