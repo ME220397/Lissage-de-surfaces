@@ -6,6 +6,7 @@
 #include <OpenMesh/Core/IO/MeshIO.hh>
 #include <OpenMesh/Core/Mesh/TriMesh_ArrayKernelT.hh>
 #include <../Eigen/Eigen/Dense>
+#include <iostream>
 
 using namespace Eigen;
 
@@ -80,6 +81,8 @@ private slots:
     void on_Unscale_clicked();
 
     void on_pushButton_2_clicked();
+
+    void on_pushButton_3_clicked();
 
 private:
 

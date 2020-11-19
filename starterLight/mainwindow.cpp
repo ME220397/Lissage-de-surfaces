@@ -153,7 +153,6 @@ double MainWindow::calcul_poids_cot(MyMesh *_mesh, VertexHandle v, VertexHandle 
 
     // On calcul ensuite la somme des cot de beta et alpha;
     MyMesh::Scalar somme = cot(alpha) + cot(beta);
-
     return somme;
 }
 
@@ -222,8 +221,10 @@ Matrix<MyMesh::Scalar, Dynamic, Dynamic> MainWindow::matrice_adj(MyMesh* _mesh)/
         {
             VertexHandle vhi = *vi;
             poids += calcul_poids_cot(_mesh, vh, vhi);//calcul le poids par rapport a deux sommets adjacents et somme sur tous les sommets voisins de v
+
         }
         m(cpt,cpt) = -poids;
+
         cpt++;
     }
     return m;
@@ -620,3 +621,18 @@ void MainWindow::on_pushButton_2_clicked()
     operateur_laplace_beltrami(&clone, UNIFORME, h ,_y);
     displayMesh(&clone);
 }
+
+void MainWindow::on_pushButton_3_clicked()
+{
+    Matrix<MyMesh::Scalar, Dynamic, Dynamic> m;
+    m = matrice_Laplace_Beltrami(&mesh);
+    for(int i = 0; i < m.rows() ; i++)
+    {
+        for(int j = 0; j < m.cols(); j++)
+        {
+            std::cout << m(i,j) << ' ';
+        }
+        std::cout << std::endl;
+    }
+}
+

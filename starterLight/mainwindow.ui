@@ -241,6 +241,16 @@
          <property name="text">
           <string>Laplace-Beltrami uni</string>
          </property>
+         <property name="pushButton_3" stdset="0">
+          <string/>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="pushButton_3">
+         <property name="text">
+          <string>Matrice Laplace-Beltrami</string>
+         </property>
         </widget>
        </item>
        <item>
@@ -319,7 +329,7 @@
      <x>0</x>
      <y>0</y>
      <width>632</width>
-     <height>21</height>
+     <height>22</height>
     </rect>
    </property>
   </widget>
