@@ -53,10 +53,10 @@ public:
     // Fonctions TPs
     void operateur_laplace_beltrami(MyMesh* _mesh, int choix, double h, double _y);
     MyMesh::Point laplace_beltrami_cot(MyMesh* _mesh, VertexHandle v);
-    void laplace_beltrami_uni(MyMesh* _mesh, VertexHandle v);
+    MyMesh::Point laplace_beltrami_uni(MyMesh* _mesh, VertexHandle v);
     double calcul_poids_cot(MyMesh* _mesh, VertexHandle vi, VertexHandle vj);
-    MyMesh::Scalar calcul_aire_barycentres(MyMesh* _mesh, VertexHandle v);
-    MyMesh::Point direction_v_vi(MyMesh* _mesh, VertexHandle v, VertexHandle vi);
+    MyMesh::Scalar neighboring_faces_area(MyMesh* _mesh, VertexHandle v);
+    MyMesh::Point calc_vector_v_vi(MyMesh* _mesh, VertexHandle v, VertexHandle vi);
     void flou_de_diffusion(MyMesh *_mesh, VertexHandle v, MyMesh::Point vi, double f);
 private slots:
 
@@ -68,6 +68,12 @@ private slots:
     void on_doubleSpinBox_valueChanged(double arg1);
 
     void on_doubleSpinBox_2_valueChanged(double arg1);
+
+    void on_scale_clicked();
+
+    void on_Unscale_clicked();
+
+    void on_pushButton_2_clicked();
 
 private:
 

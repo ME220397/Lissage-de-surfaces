@@ -7,150 +7,171 @@ double cot(double teta){
     return std::cos(teta)/std::sin(teta);
 }
 
-void scale(MyMesh* _mesh, float alpha) {
-    for (MyMesh::VertexIter viter = _mesh->vertices_begin() ; viter != _mesh->vertices_end(); viter++) {
-        VertexHandle v = *viter;
-        MyMesh::Point newCoordinate;
-        newCoordinate = _mesh->point(v);
-        _mesh->set_point(v, newCoordinate*alpha);
+void scale(MyMesh * _mesh){
+    Vec3f new_coords;
+    for(MyMesh::VertexIter v = _mesh->vertices_begin(); v != _mesh->vertices_end(); v++){
+        new_coords = _mesh->point(*v);
+        _mesh->set_point(*v, new_coords*2);
     }
-
 }
-void MainWindow::flou_de_diffusion(MyMesh *_mesh, VertexHandle v, MyMesh::Point vi, double f){
-    MyMesh::Point x = _mesh->point(v);
-    MyMesh::Point fx = vi;
-    qDebug() << fx[0] << fx[1] << fx[2];
-    fx *= f;
-    qDebug() << "{y, h} * fxi :" << fx[0] << fx[1] << fx[2];
-    MyMesh::Point new_p = x + fx;
-    qDebug() << "xi :" << new_p[0] << new_p[1] << new_p[2];
-    _mesh->set_point(v, new_p);
+
+void unscale(MyMesh * _mesh){
+    Vec3f new_coords;
+    for(MyMesh::VertexIter v = _mesh->vertices_begin(); v != _mesh->vertices_end(); v++){
+        new_coords = _mesh->point(*v);
+        _mesh->set_point(*v, new_coords*0.5);
+    }
+}
+
+
+void MainWindow::flou_de_diffusion(MyMesh *_mesh, VertexHandle v, MyMesh::Point fv, double f){
+    // On calcul le nouveau point v
+    MyMesh::Point new_v = _mesh->point(v) + f * fv;
+    qDebug() << "old v :"  << _mesh->point(v)[0] << _mesh->point(v)[1] << _mesh->point(v)[2];
+    qDebug() << " vecteur directeur : " << fv[0] << fv[1] << fv[2];
+    qDebug() << "new v :"  << new_v[0] << new_v[1] << new_v[2];
+    _mesh->set_point(v, new_v);
 }
 
 void MainWindow::operateur_laplace_beltrami(MyMesh* _mesh, int choix, double h, double _y){
-    QVector<MyMesh::Point> list_fv;
-
+    // on va maintenant appliqué le flou de diffusion en chaque point que l'on recupère dans un vecteur
+    QVector<MyMesh::Point> fvi;
     if(choix == COTANGENTE){
-        // Les points partent vers l'infini.
-        for (MyMesh::VertexIter viter = _mesh->vertices_begin() ; viter != _mesh->vertices_end(); viter++) {
-            VertexHandle v = *viter;
-            list_fv.append(laplace_beltrami_cot(_mesh, v));
-            MyMesh::Point p = laplace_beltrami_cot(_mesh, v);
-            if(factor_change)
-                flou_de_diffusion(_mesh, v, p, h);
-            else
-                flou_de_diffusion(_mesh, v,p,  _y);
+        for (MyMesh::VertexIter current = _mesh->vertices_begin(); current != _mesh->vertices_end(); current++) {
+            fvi.append(laplace_beltrami_cot(_mesh, *current));
+            //MyMesh::Point p = laplace_beltrami_cot(_mesh, *current);
+            //flou_de_diffusion(_mesh, *current, p, _y);
+            //break;
         }
+    }else{
+        for (MyMesh::VertexIter current = _mesh->vertices_begin(); current != _mesh->vertices_end(); current++) {
+            fvi.append(laplace_beltrami_uni(_mesh, *current));
+            //MyMesh::Point p = laplace_beltrami_cot(_mesh, *current);
+            //flou_de_diffusion(_mesh, *current, p, _y);
+            //break;
+        }
+    }
 
-        /*for(int i=0; i<list_fv.length(); i++){
-            VertexHandle v = _mesh->vertex_handle(i);
-            MyMesh::Point p = list_fv.at(i);
-            if(factor_change)
-                flou_de_diffusion(_mesh, v, p, _y);
-            else
-                flou_de_diffusion(_mesh, v,p,  h);
-        }*/
+    for (int i = 0; i<fvi.length(); i++) {
+        // On applique le flou de diffusion à tous les points
+        VertexHandle v = _mesh->vertex_handle(i);
+        flou_de_diffusion(_mesh, v, fvi.at(i), _y);
     }
 }
 
-void MainWindow::laplace_beltrami_uni(MyMesh* _mesh, VertexHandle v){
+MyMesh::Point MainWindow::laplace_beltrami_uni(MyMesh* _mesh, VertexHandle v){
     // A completer
+    MyMesh::Point direction;
+    direction *= 0; // Initialisation
+    MyMesh::Point u;
+    u *= 0; // Initialisation
+    MyMesh::Point somme;
+    somme *= 0; // Initialisation
+    int n_voisin = 0;
+    for(MyMesh::VertexVertexIter vi = _mesh->vv_iter(v); vi.is_valid(); vi++){
+        // 3. Calcul des du vecteur directeur vvi
+        direction = calc_vector_v_vi(_mesh, v, *vi);
+        u = direction;
+        //u.normalize();
+        somme += u;
+        n_voisin++;
+    }
+    MyMesh::Point laplacien_cot_v = 1/(n_voisin) * somme;
+    //laplacien_cot_v.normalize();
+
+    return laplacien_cot_v;
 
 }
 
-MyMesh::Point normalise_point(MyMesh::Point p){
-    float p_x_squared = pow((float)p[0], 2);
-    float p_y_squared = pow((float)p[1], 2);
-    float p_z_squared = pow((float)p[2], 2);
-
-    float norm = sqrt(p_x_squared +p_y_squared +p_z_squared);
-    //qDebug() << "direction :" << p[0] << p[1] << p[2];
-    p = p/norm;
-    //qDebug() << "direction normalisée :" << p[0] << p[1] << p[2];
-    return p;
-}
 MyMesh::Point MainWindow::laplace_beltrami_cot(MyMesh *_mesh, VertexHandle v){
-    // A completer
-    MyMesh::Scalar aire = calcul_aire_barycentres(_mesh, v);
-    //qDebug() << "aire : " << (float)aire;
-    MyMesh::Scalar facteur =1/(2*aire);
-    //if(aire < 1)
-    //    facteur = 1/2;
 
-    //qDebug() << "facteur : " << facteur;
-    MyMesh::Point v_current;
-    v_current[0] = 0;
-    v_current[1] = 0;
-    v_current[2] = 0;
-    MyMesh::Point tmp;
-    for(MyMesh::VertexVertexIter vv_it=mesh.vv_iter(v); vv_it.is_valid(); ++vv_it)
-    {
-        VertexHandle vi = *vv_it;
-        double poids = calcul_poids_cot(_mesh, v, vi);
-        double p_abs = abs(poids);
-        if(p_abs < 0.0001){
-            poids = 0;
-        }
-        //qDebug() << "poids : " << poids;
-        MyMesh::Point p = direction_v_vi(_mesh, v, vi);
-        //MyMesh::Point p = normalise_point(q);
-        //qDebug() << "p : " << p[0] << p[1] << p[2];
-        tmp[0] = poids * p[0];
-        tmp[1] = poids * p[1];
-        tmp[2] = poids * p[2];
-        //qDebug() << "tmp : " << tmp[0] << tmp[1] << tmp[2];
-        v_current += tmp;
-        //qDebug() << "v_current : " << v_current[0] << v_current[1] << v_current[2];
+    // L'approcimation cotengentielle de laplace beltrami peut se diviser en 3 parties.
+
+    // 1. Calcul de l'aire
+    MyMesh::Scalar aire = neighboring_faces_area(_mesh, v);
+
+    // Pour tout les voisins de v, on va recuperer la somme des poids multiplié
+    // par le vecteur directeur vvi que l'on va noter u;
+    MyMesh::Scalar poids;
+    MyMesh::Point direction;
+    direction *= 0; // Initialisation
+    MyMesh::Point u;
+    u *= 0; // Initialisation
+    MyMesh::Point somme;
+    somme *= 0; // Initialisation
+    for(MyMesh::VertexVertexIter vi = _mesh->vv_iter(v); vi.is_valid(); vi++){
+        // 2. Calcul des points cot
+        poids = calcul_poids_cot(_mesh, v, *vi);
+        // 3. Calcul des du vecteur directeur vvi
+        direction = calc_vector_v_vi(_mesh, v, *vi);
+        u = poids*direction;
+        //u.normalize();
+        somme += u;
     }
+    //somme.normalize();
+    //Maintenant que nous avons tout calculé, on fait place à l'opérateur du laplacien
+    MyMesh::Point laplacien_cot_v = 1/(2*aire) * somme;
+    //laplacien_cot_v.normalize();
 
-    v_current *= facteur;
-    //_mesh->set_point(v, v_current);
-    //qDebug() << "v_current * "<< facteur <<  ": " << v_current[0] << v_current[1] << v_current[2];
-    return v_current.normalized();
+    return laplacien_cot_v;
 }
 
-MyMesh::Point MainWindow::direction_v_vi(MyMesh* _mesh, VertexHandle v, VertexHandle vi){
-    MyMesh::Point fv = _mesh->point(v);
-    MyMesh::Point fvi = _mesh->point(vi);
-    MyMesh::Point u = fvi - fv;
-    return u;
-}
-double MainWindow::calcul_poids_cot(MyMesh *_mesh, VertexHandle vi, VertexHandle vj){
-    HalfedgeHandle next;
-    MyMesh::Scalar alpha= 0;
-    MyMesh::Scalar beta = 0;
+MyMesh::Point MainWindow::calc_vector_v_vi(MyMesh* _mesh, VertexHandle v, VertexHandle vi){
+    // On recupere les coordonnées de v et du voisin vi
+    MyMesh::Point coords_v = _mesh->point(v);
+    MyMesh::Point coords_vi = _mesh->point(vi);
+    // on calcul le vecteur vvi
+    MyMesh::Point vecteur = coords_vi - coords_v;
 
-    for(MyMesh::VertexIHalfedgeIter vh_it = _mesh->vih_iter(vi); vh_it.is_valid(); vh_it++){
-        HalfedgeHandle heh = vh_it;
-        if(_mesh->to_vertex_handle(heh) == vi){
-            next = _mesh->next_halfedge_handle(heh);
-            alpha = _mesh->calc_sector_angle(next);
-            //qDebug() << "alpha :" << double(alpha);
-            heh = _mesh->opposite_halfedge_handle(heh);
-            next = _mesh->next_halfedge_handle(heh);
-            beta = _mesh->calc_sector_angle(next);
-            //qDebug() << "beta :" << double(beta);
+    return vecteur;
+}
+double MainWindow::calcul_poids_cot(MyMesh *_mesh, VertexHandle v, VertexHandle vi){
+    // Un fonction de la classe MyMesh permet de calculer l'angle entre deux halfedges
+    // Pour cela nous devons d'abords recupérer une des halfedge lié à l'edge vvi;
+    HalfedgeHandle half_edge;
+    for(MyMesh::VertexOHalfedgeIter he = _mesh->voh_iter(v); he.is_valid(); he++){
+        // On s'assure que l'halfedge he pointe en direction de vi;
+        if(_mesh->to_vertex_handle(he) == vi){
+            half_edge = *he;
             break;
         }
     }
-    double cot_alpha = cot(double(alpha));
-    double cot_beta = cot(double(beta));
-    return cot_alpha + cot_beta;
+
+    // Calcul de alpha
+    // Nous avons une halfedge qui correspond à l'edge vvi et a une des deux faces
+    // Nous devons donc calculer l'angle avec les deux autres halfedges
+    MyMesh::Scalar alpha = 0;
+    HalfedgeHandle next = _mesh->next_halfedge_handle(half_edge);
+    alpha = _mesh->calc_sector_angle(next);
+
+    // Maintenant nous allons faire la meme chose avec l'halfedge opposé pour beta
+    MyMesh::Scalar beta = 0;
+    half_edge = _mesh->opposite_halfedge_handle(half_edge);
+    next = _mesh->next_halfedge_handle(half_edge);
+    beta = _mesh->calc_sector_angle(next);
+
+    // On calcul ensuite la somme des cot de beta et alpha;
+    MyMesh::Scalar somme = cot(alpha) + cot(beta);
+
+    return somme;
 }
 
-MyMesh::Scalar MainWindow::calcul_aire_barycentres(MyMesh* _mesh, VertexHandle v){
-    HalfedgeHandle halfed;
+MyMesh::Scalar MainWindow::neighboring_faces_area(MyMesh* _mesh, VertexHandle v){
+    // On veut récuperer la somme du tiers des faces voisines au point v
     MyMesh::Scalar somme = 0;
-    for(MyMesh::VertexFaceIter f_it = _mesh->vf_iter(v); f_it.is_valid(); ++f_it)
-    {
-        FaceHandle f = f_it;
-        halfed = _mesh->halfedge_handle(f);
-        MyMesh::Scalar aire = _mesh->calc_sector_area(halfed);
-        qDebug() << "aire : " << aire;
+    // On itere donc sur les faces voisines
+    MyMesh::Scalar aire = 0;
+    for(MyMesh::VertexFaceIter f = _mesh->vf_iter(v); f.is_valid(); f++){
+        // Pour  calculer l'aire avec OpenMesh, il faut recuperer l'halfedge associé à la face
+        HalfedgeHandle heh = _mesh->halfedge_handle(*f);
+        // Puis calculer l'aire avec une fonction fourni par notre classe MyMesh
+        aire = _mesh->calc_sector_area(heh);
         somme += aire;
     }
-    qDebug() << "somme aire / 3 : " << somme/3;
-    return somme/3;
+
+    // on divise ensuite la somme par trois
+    somme = somme /3;
+    return somme;
 }
 
 void MainWindow::showSelections(MyMesh* _mesh)
@@ -508,4 +529,24 @@ void MainWindow::on_doubleSpinBox_2_valueChanged(double arg1)
 {
     factor_change = false;
     _y= arg1;
+}
+
+void MainWindow::on_scale_clicked()
+{
+    scale(&clone);
+    scale(&mesh);
+    displayMesh(&clone);
+}
+
+void MainWindow::on_Unscale_clicked()
+{
+    unscale(&clone);
+    unscale(&mesh);
+    displayMesh(&clone);
+}
+
+void MainWindow::on_pushButton_2_clicked()
+{
+    operateur_laplace_beltrami(&clone, UNIFORME, h ,_y);
+    displayMesh(&clone);
 }

@@ -90,6 +90,13 @@
            <number>2</number>
           </property>
           <item>
+           <widget class="QPushButton" name="scale">
+            <property name="text">
+             <string>Scale</string>
+            </property>
+           </widget>
+          </item>
+          <item>
            <widget class="QWidget" name="widget_4" native="true">
             <layout class="QHBoxLayout" name="horizontalLayout_2">
              <property name="spacing">
@@ -107,6 +114,13 @@
              <property name="bottomMargin">
               <number>2</number>
              </property>
+             <item>
+              <widget class="QPushButton" name="Unscale">
+               <property name="text">
+                <string>Unscale</string>
+               </property>
+              </widget>
+             </item>
             </layout>
            </widget>
           </item>
@@ -215,11 +229,18 @@
           <item>
            <widget class="QPushButton" name="operateur">
             <property name="text">
-             <string>LAPLACE</string>
+             <string>Laplace-Beltrami cot</string>
             </property>
            </widget>
           </item>
          </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="pushButton_2">
+         <property name="text">
+          <string>Laplace-Beltrami uni</string>
+         </property>
         </widget>
        </item>
        <item>
@@ -231,11 +252,17 @@
        </item>
        <item>
         <widget class="QDoubleSpinBox" name="doubleSpinBox">
+         <property name="wrapping">
+          <bool>false</bool>
+         </property>
+         <property name="buttonSymbols">
+          <enum>QAbstractSpinBox::PlusMinus</enum>
+         </property>
          <property name="decimals">
-          <number>3</number>
+          <number>7</number>
          </property>
          <property name="minimum">
-          <double>0.001000000000000</double>
+          <double>0.000000000000000</double>
          </property>
          <property name="singleStep">
           <double>0.001000000000000</double>
@@ -255,13 +282,13 @@
        <item>
         <widget class="QDoubleSpinBox" name="doubleSpinBox_2">
          <property name="decimals">
-          <number>3</number>
+          <number>7</number>
          </property>
          <property name="minimum">
-          <double>0.001000000000000</double>
+          <double>0.000000000000000</double>
          </property>
          <property name="singleStep">
-          <double>0.001000000000000</double>
+          <double>0.000001000000000</double>
          </property>
         </widget>
        </item>
@@ -292,7 +319,7 @@
      <x>0</x>
      <y>0</y>
      <width>632</width>
-     <height>22</height>
+     <height>21</height>
     </rect>
    </property>
   </widget>
