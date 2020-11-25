@@ -1,8 +1,10 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-
+#include<cmath>
+#include<QVector3D>
+#include "materiel_courbures/courbures.h"
 /* **** début de la partie à compléter **** */
-
+Courbures *courb;
 double cot(double teta){
     return std::cos(teta)/std::sin(teta);
 }
@@ -11,7 +13,7 @@ void scale(MyMesh * _mesh){
     Vec3f new_coords;
     for(MyMesh::VertexIter v = _mesh->vertices_begin(); v != _mesh->vertices_end(); v++){
         new_coords = _mesh->point(*v);
-        _mesh->set_point(*v, new_coords*2);
+        _mesh->set_point(*v, new_coords*24);
     }
 }
 
@@ -19,7 +21,7 @@ void unscale(MyMesh * _mesh){
     Vec3f new_coords;
     for(MyMesh::VertexIter v = _mesh->vertices_begin(); v != _mesh->vertices_end(); v++){
         new_coords = _mesh->point(*v);
-        _mesh->set_point(*v, new_coords*0.5);
+        _mesh->set_point(*v, new_coords*1/24);
     }
 }
 
@@ -27,9 +29,6 @@ void unscale(MyMesh * _mesh){
 void MainWindow::flou_de_diffusion(MyMesh *_mesh, VertexHandle v, MyMesh::Point fv, double f){
     // On calcul le nouveau point v
     MyMesh::Point new_v = _mesh->point(v) + f * fv;
-    qDebug() << "old v :"  << _mesh->point(v)[0] << _mesh->point(v)[1] << _mesh->point(v)[2];
-    qDebug() << " vecteur directeur : " << fv[0] << fv[1] << fv[2];
-    qDebug() << "new v :"  << new_v[0] << new_v[1] << new_v[2];
     _mesh->set_point(v, new_v);
 }
 
@@ -57,6 +56,7 @@ void MainWindow::operateur_laplace_beltrami(MyMesh* _mesh, int choix, double h, 
         VertexHandle v = _mesh->vertex_handle(i);
         flou_de_diffusion(_mesh, v, fvi.at(i), _y);
     }
+
 }
 
 MyMesh::Point MainWindow::laplace_beltrami_uni(MyMesh* _mesh, VertexHandle v){
@@ -67,7 +67,7 @@ MyMesh::Point MainWindow::laplace_beltrami_uni(MyMesh* _mesh, VertexHandle v){
     u *= 0; // Initialisation
     MyMesh::Point somme;
     somme *= 0; // Initialisation
-    int n_voisin = 0;
+    double n_voisin = 0;
     for(MyMesh::VertexVertexIter vi = _mesh->vv_iter(v); vi.is_valid(); vi++){
         // 3. Calcul des du vecteur directeur vvi
         direction = calc_vector_v_vi(_mesh, v, *vi);
@@ -76,10 +76,10 @@ MyMesh::Point MainWindow::laplace_beltrami_uni(MyMesh* _mesh, VertexHandle v){
         somme += u;
         n_voisin++;
     }
-    MyMesh::Point laplacien_cot_v = 1/(n_voisin) * somme;
+    MyMesh::Point laplacien_uni_v = (1.0/n_voisin) * somme;
     //laplacien_cot_v.normalize();
 
-    return laplacien_cot_v;
+    return laplacien_uni_v;
 
 }
 
@@ -110,8 +110,10 @@ MyMesh::Point MainWindow::laplace_beltrami_cot(MyMesh *_mesh, VertexHandle v){
     }
     //somme.normalize();
     //Maintenant que nous avons tout calculé, on fait place à l'opérateur du laplacien
-    MyMesh::Point laplacien_cot_v = 1/(2*aire) * somme;
-    //laplacien_cot_v.normalize();
+    MyMesh::Point laplacien_cot_v = 1/(2.0*aire) * somme;
+    qDebug() << laplacien_cot_v[0] << laplacien_cot_v[1] << laplacien_cot_v[2];
+    laplacien_cot_v.normalize();
+    qDebug() << laplacien_cot_v[0] << laplacien_cot_v[1] << laplacien_cot_v[2];
 
     return laplacien_cot_v;
 }
@@ -125,30 +127,56 @@ MyMesh::Point MainWindow::calc_vector_v_vi(MyMesh* _mesh, VertexHandle v, Vertex
 
     return vecteur;
 }
+double norm(Vec3f v){
+    return sqrt(pow(v[0], 2) + pow(v[0], 2) +pow(v[0], 2));
+}
+double produit_scalaire(Vec3f u, Vec3f v){
+    double ux = u[0], uy = u[1], uz = u[2];
+    double vx = v[0], vy = v[1], vz = v[2];
+
+    return ux*vx + uy*vy + uz*vz;
+}
+double calc_angle(MyMesh::Point v, MyMesh::Point vi, MyMesh::Point p){
+    double vx = v[0], vy = v[1], vz = v[2];
+    double vix = vi[0], viy = vi[1], viz = vi[2];
+    double px = p[0], py = p[1], pz = p[2];
+
+    QVector3D u(vx - px, vy - py, vz - pz);
+    QVector3D w(vix - px, viy - py, viz - pz);
+    u.normalize();
+    w.normalize();
+    double cos = QVector3D::dotProduct(u, w);
+    double angle = acos(cos);
+    return angle;
+
+}
 double MainWindow::calcul_poids_cot(MyMesh *_mesh, VertexHandle v, VertexHandle vi){
     // Un fonction de la classe MyMesh permet de calculer l'angle entre deux halfedges
     // Pour cela nous devons d'abords recupérer une des halfedge lié à l'edge vvi;
     HalfedgeHandle half_edge;
     for(MyMesh::VertexOHalfedgeIter he = _mesh->voh_iter(v); he.is_valid(); he++){
         // On s'assure que l'halfedge he pointe en direction de vi;
-        if(_mesh->to_vertex_handle(he) == vi){
+        if(_mesh->to_vertex_handle(*he) == vi){
             half_edge = *he;
             break;
         }
     }
-
     // Calcul de alpha
     // Nous avons une halfedge qui correspond à l'edge vvi et a une des deux faces
     // Nous devons donc calculer l'angle avec les deux autres halfedges
     MyMesh::Scalar alpha = 0;
     HalfedgeHandle next = _mesh->next_halfedge_handle(half_edge);
-    alpha = _mesh->calc_sector_angle(next);
+    VertexHandle vh = _mesh->to_vertex_handle(next);
+    MyMesh::Point right = _mesh->point(vh);
+    alpha = calc_angle(_mesh->point(v), _mesh->point(vi), right);
 
     // Maintenant nous allons faire la meme chose avec l'halfedge opposé pour beta
     MyMesh::Scalar beta = 0;
     half_edge = _mesh->opposite_halfedge_handle(half_edge);
     next = _mesh->next_halfedge_handle(half_edge);
-    beta = _mesh->calc_sector_angle(next);
+    vh = _mesh->to_vertex_handle(next);
+    MyMesh::Point left = _mesh->point(vh);
+    beta = calc_angle(_mesh->point(v), _mesh->point(vi), left);
 
     // On calcul ensuite la somme des cot de beta et alpha;
     MyMesh::Scalar somme = cot(alpha) + cot(beta);
@@ -156,22 +184,49 @@ double MainWindow::calcul_poids_cot(MyMesh *_mesh, VertexHandle v, VertexHandle 
     return somme;
 }
 
+double calcul_aire(MyMesh::Point p[]){
+    MyMesh::Point v1 = p[0];
+    MyMesh::Point v2 = p[1];
+    MyMesh::Point v3 = p[2];
+
+    // on recupere le vecteur v1v2
+    MyMesh::Point u = v2 - v1;
+    // on recupere le vecteur v1v3
+    MyMesh::Point v = v3 - v1;
+
+    double ux = u[0], uy = u[1], uz = u[2];
+    double vx = v[0], vy = v[1], vz = v[2];
+
+    // on calcul les determinant du produit vectoriel
+    volatile double i = (uy*vz - vy*uz);
+    volatile double j = (ux*vz - vx*uz);
+    volatile double k = (ux*vy - vx*uy);
+
+    volatile double area2 = i - j + k;
+    volatile double area = abs(area2)/2.0;
+    return area;
+
+}
 MyMesh::Scalar MainWindow::neighboring_faces_area(MyMesh* _mesh, VertexHandle v){
     // On veut récuperer la somme du tiers des faces voisines au point v
     MyMesh::Scalar somme = 0;
     // On itere donc sur les faces voisines
     MyMesh::Scalar aire = 0;
+    MyMesh::Point points[3];
+    int cpt= 0;
     for(MyMesh::VertexFaceIter f = _mesh->vf_iter(v); f.is_valid(); f++){
+        cpt = 0;
         // Pour  calculer l'aire avec OpenMesh, il faut recuperer l'halfedge associé à la face
-        HalfedgeHandle heh = _mesh->halfedge_handle(*f);
+        for(MyMesh::FaceVertexIter fv_it = _mesh->fv_iter(*f); fv_it.is_valid(); fv_it++){
+            points[cpt++] = _mesh->point(*fv_it);
+        }
         // Puis calculer l'aire avec une fonction fourni par notre classe MyMesh
-        aire = _mesh->calc_sector_area(heh);
+        aire = calcul_aire(points);
         somme += aire;
     }
 
     // on divise ensuite la somme par trois
-    somme = somme /3;
-    return somme;
+    return somme/3;
 }
 
 void MainWindow::showSelections(MyMesh* _mesh)
@@ -380,6 +435,32 @@ void MainWindow::displayMesh(MyMesh* _mesh, DisplayMode mode)
         }
     }
 
+    if (mode == DisplayMode::VertexColorShading)
+    {
+        MyMesh::ConstFaceIter fIt(_mesh->faces_begin()), fEnd(_mesh->faces_end());
+        MyMesh::ConstFaceVertexIter fvIt;
+        for (; fIt!=fEnd; ++fIt)
+        {
+            fvIt = _mesh->cfv_iter(*fIt);
+            triCols[3*i+0] = _mesh->color(*fvIt)[0]; triCols[3*i+1] = _mesh->color(*fvIt)[1]; triCols[3*i+2] = _mesh->color(*fvIt)[2];
+            triVerts[3*i+0] = _mesh->point(*fvIt)[0]; triVerts[3*i+1] = _mesh->point(*fvIt)[1]; triVerts[3*i+2] = _mesh->point(*fvIt)[2];
+            triIndiceArray[i] = i;
+
+            i++; ++fvIt;
+            triCols[3*i+0] = _mesh->color(*fvIt)[0]; triCols[3*i+1] = _mesh->color(*fvIt)[1]; triCols[3*i+2] = _mesh->color(*fvIt)[2];
+            triVerts[3*i+0] = _mesh->point(*fvIt)[0]; triVerts[3*i+1] = _mesh->point(*fvIt)[1]; triVerts[3*i+2] = _mesh->point(*fvIt)[2];
+            triIndiceArray[i] = i;
+
+            i++; ++fvIt;
+            triCols[3*i+0] = _mesh->color(*fvIt)[0]; triCols[3*i+1] = _mesh->color(*fvIt)[1]; triCols[3*i+2] = _mesh->color(*fvIt)[2];
+            triVerts[3*i+0] = _mesh->point(*fvIt)[0]; triVerts[3*i+1] = _mesh->point(*fvIt)[1]; triVerts[3*i+2] = _mesh->point(*fvIt)[2];
+            triIndiceArray[i] = i;
+
+            i++;
+        }
+    }
+
+
 
     ui->displayWidget->loadMesh(triVerts, triCols, _mesh->n_faces() * 3 * 3, triIndiceArray, _mesh->n_faces() * 3);
 
@@ -531,18 +612,26 @@ void MainWindow::on_doubleSpinBox_2_valueChanged(double arg1)
     _y= arg1;
 }
 
-void MainWindow::on_scale_clicked()
-{
-    scale(&clone);
-    scale(&mesh);
-    displayMesh(&clone);
+void MainWindow::calc_courbure(MyMesh *_mesh){
+    _mesh->update_normals();
+    _mesh->request_vertex_colors() ;
+
+    courb = new Courbures(*_mesh) ;
+    resetAllColorsAndThickness(_mesh);
+    courb->compute_KH();
+    courb->set_K_colors(H);
+    displayMesh(&mesh,DisplayMode::ColorShading);
 }
 
+void set_white_color(MyMesh * _mesh){
+    for(MyMesh::VertexIter v = _mesh->vertices_begin(); v != _mesh->vertices_end(); v++){
+        _mesh->set_color(*v, MyMesh::Color(150,150,150));
+    }
+}
 void MainWindow::on_Unscale_clicked()
 {
-    unscale(&clone);
-    unscale(&mesh);
-    displayMesh(&clone);
+    calc_courbure(&clone);
+    displayMesh(&clone, DisplayMode::VertexColorShading);
 }
 
 void MainWindow::on_pushButton_2_clicked()

@@ -30,7 +30,7 @@ struct MyTraits : public OpenMesh::DefaultTraits
 typedef OpenMesh::TriMesh_ArrayKernelT<MyTraits> MyMesh;
 
 
-enum DisplayMode {Normal, TemperatureMap, ColorShading};
+enum DisplayMode {Normal, TemperatureMap, ColorShading, VertexColorShading};
 
 class MainWindow : public QMainWindow
 {
@@ -58,6 +58,8 @@ public:
     MyMesh::Scalar neighboring_faces_area(MyMesh* _mesh, VertexHandle v);
     MyMesh::Point calc_vector_v_vi(MyMesh* _mesh, VertexHandle v, VertexHandle vi);
     void flou_de_diffusion(MyMesh *_mesh, VertexHandle v, MyMesh::Point vi, double f);
+    // Fonction Courbure Moyenne
+    void calc_courbure(MyMesh *_mesh);
 private slots:
 
     void on_pushButton_chargement_clicked();
@@ -69,8 +71,6 @@ private slots:
 
     void on_doubleSpinBox_2_valueChanged(double arg1);
 
-    void on_scale_clicked();
-
     void on_Unscale_clicked();
 
     void on_pushButton_2_clicked();
@@ -79,7 +79,7 @@ private:
 
     bool modevoisinage;
     const int COTANGENTE = 0;
-    const int UNIFORME = 0;
+    const int UNIFORME = 1;
     MyMesh mesh;
     MyMesh clone;
 
@@ -91,6 +91,7 @@ private:
     double _y = 0.001;
     bool factor_change = false;
     Ui::MainWindow *ui;
+    bool h_on = false;
 };
 
 #endif // MAINWINDOW_H
