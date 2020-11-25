@@ -55,7 +55,7 @@ public:
     void resetAllColorsAndThickness(MyMesh* _mesh);
 
     // Fonctions TPs
-    void operateur_laplace_beltrami(MyMesh* _mesh, int choix, double h, double _y);
+    void operateur_laplace_beltrami(MyMesh* _mesh, int choix, double f);
     MyMesh::Point laplace_beltrami_cot(MyMesh* _mesh, VertexHandle v);
     MyMesh::Point laplace_beltrami_uni(MyMesh* _mesh, VertexHandle v);
     double calcul_poids_cot(MyMesh* _mesh, VertexHandle vi, VertexHandle vj);
@@ -96,8 +96,8 @@ private:
     int edgeSelection;
     int faceSelection;
 
-    double h = -0.001;
-    double _y = 0.001;
+    double h = 0.0030;
+    double _y = 0.100;
     bool factor_change = false;
     Ui::MainWindow *ui;
     bool h_on = false;

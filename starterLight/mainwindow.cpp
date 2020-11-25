@@ -32,22 +32,25 @@ void MainWindow::flou_de_diffusion(MyMesh *_mesh, VertexHandle v, MyMesh::Point 
     _mesh->set_point(v, new_v);
 }
 
-void MainWindow::operateur_laplace_beltrami(MyMesh* _mesh, int choix, double h, double _y){
+void MainWindow::operateur_laplace_beltrami(MyMesh* _mesh, int choix, double f){
     // on va maintenant appliqué le flou de diffusion en chaque point que l'on recupère dans un vecteur
+    double factor = 0.00;
     QVector<MyMesh::Point> fvi;
     if(choix == COTANGENTE){
+        factor = f;
         for (MyMesh::VertexIter current = _mesh->vertices_begin(); current != _mesh->vertices_end(); current++) {
             fvi.append(laplace_beltrami_cot(_mesh, *current));
             //MyMesh::Point p = laplace_beltrami_cot(_mesh, *current);
-            //flou_de_diffusion(_mesh, *current, p, _y);
+            //flou_de_diffusion(_mesh, *current, p, factor);
             //break;
         }
     }
     else{
+        factor = _y;
         for (MyMesh::VertexIter current = _mesh->vertices_begin(); current != _mesh->vertices_end(); current++) {
             fvi.append(laplace_beltrami_uni(_mesh, *current));
             //MyMesh::Point p = laplace_beltrami_cot(_mesh, *current);
-            //flou_de_diffusion(_mesh, *current, p, _y);
+            //flou_de_diffusion(_mesh, *current, p, factor);
             //break;
         }
     }
@@ -55,7 +58,7 @@ void MainWindow::operateur_laplace_beltrami(MyMesh* _mesh, int choix, double h, 
     for (int i = 0; i<fvi.length(); i++) {
         // On applique le flou de diffusion à tous les points
         VertexHandle v = _mesh->vertex_handle(i);
-        flou_de_diffusion(_mesh, v, fvi.at(i), _y);
+        flou_de_diffusion(_mesh, v, fvi.at(i), factor);
     }
 
 }
@@ -661,7 +664,7 @@ MainWindow::~MainWindow()
 
 void MainWindow::on_operateur_clicked()
 {
-    operateur_laplace_beltrami(&clone, COTANGENTE, h ,_y);
+    operateur_laplace_beltrami(&clone, COTANGENTE, h);
     displayMesh(&clone);
 }
 
@@ -673,13 +676,11 @@ void MainWindow::on_pushButton_clicked()
 
 void MainWindow::on_doubleSpinBox_valueChanged(double arg1)
 {
-    factor_change = true;
-    h = -arg1;
+    h = arg1;
 }
 
 void MainWindow::on_doubleSpinBox_2_valueChanged(double arg1)
 {
-    factor_change = false;
     _y= arg1;
 }
 
@@ -707,7 +708,7 @@ void MainWindow::on_Unscale_clicked()
 
 void MainWindow::on_pushButton_2_clicked()
 {
-    operateur_laplace_beltrami(&clone, UNIFORME, h ,_y);
+    operateur_laplace_beltrami(&clone, UNIFORME, _y);
     displayMesh(&clone);
 }
 

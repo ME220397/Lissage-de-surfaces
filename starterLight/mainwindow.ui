@@ -220,6 +220,26 @@
            </widget>
           </item>
           <item>
+           <widget class="QLabel" name="label">
+            <property name="text">
+             <string>Facteur Y pour cot</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QDoubleSpinBox" name="doubleSpinBox">
+            <property name="decimals">
+             <number>4</number>
+            </property>
+            <property name="singleStep">
+             <double>0.000100000000000</double>
+            </property>
+            <property name="value">
+             <double>0.003000000000000</double>
+            </property>
+           </widget>
+          </item>
+          <item>
            <widget class="QPushButton" name="operateur">
             <property name="text">
              <string>Laplace-Beltrami cot</string>
@@ -227,6 +247,29 @@
            </widget>
           </item>
          </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_2">
+         <property name="text">
+          <string>Facteur y pour uniforme</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QDoubleSpinBox" name="doubleSpinBox_2">
+         <property name="decimals">
+          <number>3</number>
+         </property>
+         <property name="minimum">
+          <double>0.000000000000000</double>
+         </property>
+         <property name="singleStep">
+          <double>0.001000000000000</double>
+         </property>
+         <property name="value">
+          <double>0.100000000000000</double>
+         </property>
         </widget>
        </item>
        <item>
@@ -243,29 +286,6 @@
         <widget class="QPushButton" name="pushButton_3">
          <property name="text">
           <string>Matrice Laplace-Beltrami</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QLabel" name="label_2">
-         <property name="text">
-          <string>Facteur y</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QDoubleSpinBox" name="doubleSpinBox_2">
-         <property name="decimals">
-          <number>7</number>
-         </property>
-         <property name="minimum">
-          <double>0.000000000000000</double>
-         </property>
-         <property name="singleStep">
-          <double>0.000001000000000</double>
-         </property>
-         <property name="value">
-          <double>1.000000000000000</double>
          </property>
         </widget>
        </item>
@@ -296,7 +316,7 @@
      <x>0</x>
      <y>0</y>
      <width>632</width>
-     <height>22</height>
+     <height>21</height>
     </rect>
    </property>
   </widget>
