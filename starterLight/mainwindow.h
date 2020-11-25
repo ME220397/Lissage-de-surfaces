@@ -34,7 +34,7 @@ struct MyTraits : public OpenMesh::DefaultTraits
 typedef OpenMesh::TriMesh_ArrayKernelT<MyTraits> MyMesh;
 
 
-enum DisplayMode {Normal, TemperatureMap, ColorShading};
+enum DisplayMode {Normal, TemperatureMap, ColorShading, VertexColorShading};
 
 class MainWindow : public QMainWindow
 {
@@ -65,6 +65,8 @@ public:
     Matrix<MyMesh::Scalar, Dynamic, Dynamic> matrice_diag(MyMesh* _mesh);
     Matrix<MyMesh::Scalar, Dynamic, Dynamic> matrice_adj(MyMesh* _mesh);
     Matrix<MyMesh::Scalar, Dynamic, Dynamic> matrice_Laplace_Beltrami(MyMesh* _mesh);
+    // Fonction Courbure Moyenne
+    void calc_courbure(MyMesh *_mesh);
 private slots:
 
     void on_pushButton_chargement_clicked();
@@ -76,8 +78,6 @@ private slots:
 
     void on_doubleSpinBox_2_valueChanged(double arg1);
 
-    void on_scale_clicked();
-
     void on_Unscale_clicked();
 
     void on_pushButton_2_clicked();
@@ -88,7 +88,7 @@ private:
 
     bool modevoisinage;
     const int COTANGENTE = 0;
-    const int UNIFORME = 0;
+    const int UNIFORME = 1;
     MyMesh mesh;
     MyMesh clone;
 
@@ -100,6 +100,7 @@ private:
     double _y = 0.001;
     bool factor_change = false;
     Ui::MainWindow *ui;
+    bool h_on = false;
 };
 
 #endif // MAINWINDOW_H

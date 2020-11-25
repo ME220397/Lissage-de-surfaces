@@ -35,16 +35,20 @@ unix:!macx {
 
 macx: {
     INCLUDEPATH += $$PWD/../OpenMesh/inc/
+    INCLUDEPATH += $$PWD/../Eigen/
     LIBS += -L$$PWD/../OpenMesh/libosx/ -lOpenMeshCore -lOpenMeshTools
+
 }
 
 SOURCES += \
         main.cpp \
         mainwindow.cpp \
+    materiel_courbures/courbures.cpp \
     meshviewerwidget.cpp
 
 HEADERS += \
         mainwindow.h \
+    materiel_courbures/courbures.h \
     meshviewerwidget.h
 
 FORMS += \
